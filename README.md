@@ -1,5 +1,4 @@
 
-```markdown
 # Load Test CLI
 
 ## Objective
@@ -33,7 +32,7 @@ Generate a report at the end of the tests containing:
 You can use this application by making a call via Docker. For example:
 ```bash
 docker run <your docker image> --url=http://google.com --requests=1000 --concurrency=10
-```
+
 
 ## Building and Running the Project
 
