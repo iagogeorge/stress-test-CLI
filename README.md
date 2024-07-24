@@ -1,3 +1,5 @@
+
+```markdown
 # Load Test CLI
 
 ## Objective
@@ -31,3 +33,25 @@ Generate a report at the end of the tests containing:
 You can use this application by making a call via Docker. For example:
 ```bash
 docker run <your docker image> --url=http://google.com --requests=1000 --concurrency=10
+```
+
+## Building and Running the Project
+
+### Build and Run the Test Server
+
+Navigate to the directory where the `Dockerfile.testserver` is located and run:
+
+```bash
+docker build -t testserver -f Dockerfile.testserver .
+docker run -d -p 8080:8080 testserver
+```
+
+### Build and Run the Load Test CLI
+
+Navigate to the directory where the `Dockerfile` for the CLI is located and run:
+
+```bash
+docker build -t loadtest .
+docker run loadtest --url=http://localhost:8080/cotacao --requests=1000 --concurrency=10
+```
+```
