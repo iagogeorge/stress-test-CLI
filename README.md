@@ -37,21 +37,12 @@ docker run <your docker image> --url=http://google.com --requests=1000 --concurr
 
 ## Building and Running the Project
 
-### Build and Run the Test Server
-
-Navigate to the directory where the `Dockerfile.testserver` is located and run:
-
-```bash
-docker build -t testserver -f Dockerfile.testserver .
-docker run -d -p 8080:8080 testserver
-```
-
 ### Build and Run the Load Test CLI
 
 Navigate to the directory where the `Dockerfile` for the CLI is located and run:
 
 ```bash
 docker build -t loadtest .
-docker run loadtest --url=http://localhost:8080/cotacao --requests=1000 --concurrency=10
+docker run load-tester --url=http://google.com --requests=100 --concurrency=10
 ```
 ```
