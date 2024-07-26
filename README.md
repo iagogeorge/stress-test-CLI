@@ -42,7 +42,7 @@ docker run <your docker image> --url=http://google.com --requests=1000 --concurr
 Navigate to the directory where the `Dockerfile` for the CLI is located and run:
 
 ```bash
-docker build -t loadtest .
+docker build -t load-tester .
 docker run load-tester --url=http://google.com --requests=100 --concurrency=10
 ```
 ```
