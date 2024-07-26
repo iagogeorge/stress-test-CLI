@@ -43,6 +43,6 @@ Navigate to the directory where the `Dockerfile` for the CLI is located and run:
 
 ```bash
 docker build -t loadtest .
-docker run loadtest --url=http://localhost:8080/cotacao --requests=1000 --concurrency=10
+docker run load-tester --url=http://google.com --requests=100 --concurrency=10
 ```
 ```
