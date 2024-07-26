@@ -1,29 +1,13 @@
-# Use the official Golang image to build the application
-FROM golang:1.21 AS builder
+FROM golang:1.21-alpine
 
-# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy the Go Modules manifests
-COPY go.mod go.sum ./
-
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
 
-# Copy the source code into the container
-COPY . .
+COPY *.go ./
 
-# Build the Go app
-RUN go build -o loadtest .
+RUN go build -o /load-tester
 
-# Start a new stage from scratch
-FROM alpine:latest
-
-# Set the Current Working Directory inside the container
-WORKDIR /root/
-
-# Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/loadtest .
-
-# Command to run the executable
-ENTRYPOINT ["./loadtest"]
+ENTRYPOINT ["/load-tester"]

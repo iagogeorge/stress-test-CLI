@@ -3,61 +3,76 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
 )
 
+type Result struct {
+	status int
+}
+
+func worker(url string, requests int, results chan<- Result, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for i := 0; i < requests; i++ {
+		resp, err := http.Get(url)
+		if err != nil {
+			results <- Result{status: 0}
+			continue
+		}
+		results <- Result{status: resp.StatusCode}
+		resp.Body.Close()
+	}
+}
+
 func main() {
-	// Define CLI flags
-	url := flag.String("url", "", "URL of the service to test")
-	requests := flag.Int("requests", 100, "Total number of requests to perform")
-	concurrency := flag.Int("concurrency", 10, "Number of concurrent requests")
+	url := flag.String("url", "", "URL to load test")
+	requests := flag.Int("requests", 1, "Number of total requests")
+	concurrency := flag.Int("concurrency", 1, "Number of concurrent requests")
 	flag.Parse()
 
 	if *url == "" {
-		log.Fatal("URL must be provided")
-	}
-	if *requests <= 0 || *concurrency <= 0 {
-		log.Fatal("Requests and concurrency must be positive integers")
+		fmt.Println("URL is required")
+		flag.Usage()
+		return
 	}
 
-	startTime := time.Now()
+	fmt.Println("Load test process started...")
+
+	start := time.Now()
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, *concurrency)
-	var mu sync.Mutex
-	statusCounts := make(map[int]int)
+	results := make(chan Result, *requests)
+	perWorker := *requests / *concurrency
 
-	for i := 0; i < *requests; i++ {
+	for i := 0; i < *concurrency; i++ {
 		wg.Add(1)
-		semaphore <- struct{}{}
-		go func() {
-			defer wg.Done()
-			defer func() { <-semaphore }()
-			resp, err := http.Get(*url)
-			if err != nil {
-				log.Printf("Error making request: %v", err)
-				return
-			}
-			defer resp.Body.Close()
-			
-			mu.Lock()
-			statusCounts[resp.StatusCode]++
-			mu.Unlock()
-		}()
+		go worker(*url, perWorker, results, &wg)
 	}
 
-	wg.Wait()
-	elapsedTime := time.Since(startTime)
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
 
-	fmt.Printf("Test completed in %s\n", elapsedTime)
-	fmt.Printf("Total requests: %d\n", *requests)
-	fmt.Printf("HTTP 200 OK: %d\n", statusCounts[http.StatusOK])
-	fmt.Printf("Other HTTP statuses:\n")
-	for code, count := range statusCounts {
-		if code != http.StatusOK {
-			fmt.Printf("  %d: %d\n", code, count)
+	totalRequests := 0
+	successfulRequests := 0
+	statusCodes := make(map[int]int)
+
+	for result := range results {
+		totalRequests++
+		if result.status == 200 {
+			successfulRequests++
 		}
+		statusCodes[result.status]++
+	}
+
+	duration := time.Since(start)
+
+	fmt.Printf("Total time taken: %s\n", duration)
+	fmt.Printf("Total requests: %d\n", totalRequests)
+	fmt.Printf("Successful requests (status 200): %d\n", successfulRequests)
+	fmt.Println("Status code distribution:")
+	for code, count := range statusCodes {
+		fmt.Printf("  %d: %d\n", code, count)
 	}
 }
